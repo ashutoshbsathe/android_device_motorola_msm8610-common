@@ -18,7 +18,7 @@
 # thorughout the system. It should not be used to conditionally
 # disable makefiles (the proper mechanism to control what gets
 # included in a build is to use PRODUCT_PACKAGES in a product
-# definition file).
+# int definition file).
 #
 
 COMMON_PATH := device/motorola/msm8610-common
@@ -64,7 +64,7 @@ TARGET_SYSTEM_PROP := $(COMMON_PATH)/system.prop
 BOARD_USES_ALSA_AUDIO := true
 AUDIO_FEATURE_ENABLED_MULTI_VOICE_SESSIONS := true
 AUDIO_FEATURE_ENABLED_NEW_SAMPLE_RATE := true
-USE_CUSTOM_AUDIO_POLICY := 0
+USE_CUSTOM_AUDIO_POLICY := 1
 BOARD_USES_GENERIC_AUDIO := true
 TARGET_USES_QCOM_MM_AUDIO := true
 
@@ -78,12 +78,18 @@ BLUETOOTH_HCI_USE_MCT := true
 TARGET_HAS_LEGACY_CAMERA_HAL1 := true
 TARGET_USES_NON_TREBLE_CAMERA := true
 USE_DEVICE_SPECIFIC_CAMERA := true
+TARGET_USES_MEDIA_EXTENSIONS := true
+TARGET_PROVIDES_CAMERA_HAL := true
 
 # Charger
 BOARD_CHARGING_MODE_BOOTING_LPM := /sys/mmi_lpm/lpm_mode
-BACKLIGHT_PATH := /sys/class/leds/lcd-backlight/brightness
 BOARD_CHARGER_ENABLE_SUSPEND := true
 BOARD_NO_CHARGER_LED := true
+BOARD_CHARGING_CMDLINE_NAME  := "androidboot.mode"
+BOARD_CHARGING_CMDLINE_VALUE := "usb_chg"
+BACKLIGHT_PATH := "/sys/class/leds/lcd-backlight/brightness"
+BOARD_CHARGER_DISABLE_INIT_BLANK := true
+BLINK_PATH     := "/sys/class/leds/led:rgb_red/blink"
 
 # Display
 USE_OPENGL_RENDERER := true
@@ -117,6 +123,11 @@ MALLOC_SVELTE := true
 # Qualcomm support
 BOARD_USES_QCOM_HARDWARE := true
 
+# Power
+TARGET_HAS_LEGACY_POWER_STATS := true
+TARGET_HAS_NO_WIFI_STATS := true
+TARGET_USES_INTERACTION_BOOST := true
+
 #TARGET_RIL_VARIANT := caf
 
 # Recovery
@@ -125,8 +136,13 @@ BOARD_HAS_NO_SELECT_BUTTON := true
 HAVE_SELINUX := true
 
 # SELinux
-#include device/qcom/sepolicy/sepolicy.mk
-#BOARD_SEPOLICY_DIRS += $(COMMON_PATH)/sepolicy
+include device/qcom/sepolicy/sepolicy.mk
+include device/qcom/sepolicy/legacy-sepolicy.mk
+BOARD_SEPOLICY_DIRS += $(COMMON_PATH)/sepolicy
+
+# HIDL
+DEVICE_MANIFEST_FILE := $(COMMON_PATH)/manifest.xml
+DEVICE_MATRIX_FILE := $(COMMON_PATH)/compatibility_matrix.xml
 
 # Storage & partiiton
 TARGET_USERIMAGES_USE_EXT4 := true
@@ -137,6 +153,16 @@ BOARD_VOLD_DISC_HAS_MULTIPLE_MAJORS := true
 BOARD_VOLD_EMMC_SHARES_DEV_MAJOR := true
 BOARD_VOLD_MAX_PARTITIONS := 40
 TARGET_USE_CUSTOM_LUN_FILE_PATH := /sys/devices/platform/msm_hsusb/gadget/lun%d/file
+
+# Shims
+TARGET_LD_SHIM_LIBS := /system/lib/liblog.so|libmoto.so \
+                       /system/vendor/lib/libqc-opt.so|libshim_qcopt.so \
+                       /system/vendor/bin/thermal-engine:libshims_thermal.so \
+                       /system/vendor/bin/mpdecision|libshims_atomic.so \
+                       /system/lib/libmot_sensorlistener.so|libshims_sensorlistener.so \
+                       /system/vendor/lib/libqc-opt.so|libshims_sensorlistener.so \
+                       /system/vendor/lib/libmmcamera2_stats_algorithm.so|libshims_atomic.so \
+                       /system/lib/libmdmcutback.so|libqsap_shim.so
 
 # Wifi
 BOARD_HAS_QCOM_WLAN := true
@@ -149,6 +175,7 @@ BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_qcwcn
 WIFI_DRIVER_FW_PATH_AP := "ap"
 WIFI_DRIVER_FW_PATH_STA := "sta"
 WPA_SUPPLICANT_VERSION := VER_0_8_X
+PRODUCT_VENDOR_MOVE_ENABLED := true
 
 # Basic dexpreopt
 ifeq ($(HOST_OS),linux)
